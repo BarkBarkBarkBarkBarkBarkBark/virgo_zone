@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <title>VirgoZone</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/websocket.js" defer></script>
+  <script src="/static/effects.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#feed" aria-label="VirgoZone feed">
+      <span class="brand-mark" aria-hidden="true">♍</span>
+      <span>VIRGO<span class="brand-lan">ZONE</span></span>
+    </a>
+    <div class="topbar-actions">
+      <span class="connection" id="connection-state" role="status">
+        <span class="connection-dot" aria-hidden="true"></span>
+        <span id="connection-label">connecting</span>
+      </span>
+      <button class="icon-button" id="identity-button" type="button" title="Change display name" aria-label="Change display name">⌁</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel schedule-panel" id="schedule" aria-labelledby="schedule-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">shared time</p>
+          <h1 id="schedule-heading">Schedule</h1>
+        </div>
+        <button class="icon-button" id="schedule-admin-button" type="button" title="Schedule admin" aria-label="Schedule admin">⌁</button>
+      </div>
+      <div class="schedule-list" id="schedule-list" aria-live="polite"></div>
+    </section>
+
+    <section class="panel feed-panel is-active" id="feed" aria-labelledby="feed-heading">
+      <div class="panel-heading feed-heading">
+        <div>
+          <p class="eyebrow">live from the local ether</p>
+          <h1 id="feed-heading">The wall</h1>
+        </div>
+        <button class="upload-button" id="upload-button" type="button" title="Add a photo or video">
+          <span aria-hidden="true">＋</span>
+          <span>Add</span>
+        </button>
+      </div>
+      <div class="media-grid" id="media-grid" aria-live="polite"></div>
+    </section>
+
+    <section class="panel chat-panel" id="chat" aria-labelledby="chat-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">general channel</p>
+          <h1 id="chat-heading">Chat</h1>
+        </div>
+        <span class="panel-glyph fairy-awake" id="fairy-state" title="Fairy status" aria-label="Fairy status">✧</span>
+      </div>
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <form class="composer" id="chat-form">
+        <label class="sr-only" for="chat-input">Message</label>
+        <textarea id="chat-input" rows="1" maxlength="2000" placeholder="say something to the LAN"></textarea>
+        <button class="send-button" type="submit" title="Send message" aria-label="Send message">↗</button>
+      </form>
+    </section>
+  </main>
+
+  <button class="fairy-button" id="fairy-button" type="button" title="Ask the LAN fairy" aria-label="Ask the LAN fairy">✦</button>
+
+  <nav class="mobile-nav" aria-label="Main views">
+    <button type="button" data-view="feed" class="is-active"><span aria-hidden="true">✦</span> Feed</button>
+    <button type="button" data-view="chat"><span aria-hidden="true">◌</span> Chat</button>
+    <button type="button" data-view="schedule"><span aria-hidden="true">◷</span> Schedule</button>
+  </nav>
+
+  <dialog class="identity-dialog" id="identity-dialog">
+    <form method="dialog" id="identity-form">
+      <span class="dialog-star" aria-hidden="true">✦</span>
+      <p class="eyebrow">network handshake</p>
+      <h2>What shall the network call you?</h2>
+      <label for="display-name">Display name</label>
+      <input id="display-name" name="display-name" type="text" maxlength="40" autocomplete="nickname" required autofocus>
+      <p class="form-error" id="identity-error" role="alert"></p>
+      <button class="primary-button" type="submit">Enter VirgoZone <span aria-hidden="true">↗</span></button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="upload-dialog">
+    <form id="upload-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">send to the wall</p>
+          <h2>New artifact</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="upload-dialog" title="Close" aria-label="Close">×</button>
+      </div>
+      <label for="media-file">Photo or video</label>
+      <input id="media-file" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime" required>
+      <label for="media-caption">Caption <span>optional</span></label>
+      <textarea id="media-caption" name="caption" rows="3" maxlength="500" placeholder="what is happening here"></textarea>
+      <p class="form-error" id="upload-error" role="alert"></p>
+      <button class="primary-button" id="upload-submit" type="submit">Put it on the wall <span aria-hidden="true">↗</span></button>
+    </form>
+  </dialog>
+
+  <dialog class="lightbox" id="media-lightbox">
+    <div class="lightbox-shell">
+      <button class="icon-button lightbox-close" type="button" data-close-dialog="media-lightbox" title="Close" aria-label="Close">×</button>
+      <div class="lightbox-media" id="lightbox-media"></div>
+      <aside class="lightbox-notes" id="lightbox-notes"></aside>
+    </div>
+  </dialog>
+
+  <dialog class="form-dialog" id="fairy-dialog">
+    <form id="fairy-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">knock on the tiny door</p>
+          <h2>Ask LAN FAIRY</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="fairy-dialog" title="Close" aria-label="Close">×</button>
+      </div>
+      <label for="fairy-prompt">Message</label>
+      <textarea id="fairy-prompt" rows="3" maxlength="1000" placeholder="what does the council think"></textarea>
+      <p class="form-error" id="fairy-error" role="alert"></p>
+      <button class="primary-button" id="fairy-submit" type="submit">Summon opinion <span aria-hidden="true">✦</span></button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="admin-dialog">
+    <form id="admin-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">trusted LAN control</p>
+          <h2>Admin mode</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="admin-dialog" title="Close" aria-label="Close">×</button>
+      </div>
+      <label for="admin-password">Shared password</label>
+      <input id="admin-password" type="password" maxlength="256" autocomplete="current-password" required>
+      <p class="admin-storage" id="admin-storage"></p>
+      <p class="form-error" id="admin-error" role="alert"></p>
+      <button class="primary-button" id="admin-submit" type="submit">Unlock controls <span aria-hidden="true">⌁</span></button>
+      <button class="secondary-button" id="admin-logout" type="button" hidden>Leave admin mode</button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="schedule-dialog">
+    <form id="schedule-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">shared time</p>
+          <h2 id="schedule-form-title">New event</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="schedule-dialog" title="Close" aria-label="Close">×</button>
+      </div>
+      <input id="schedule-id" type="hidden">
+      <label for="schedule-title">Title</label>
+      <input id="schedule-title" type="text" maxlength="120" required>
+      <label for="schedule-description">Description <span>optional</span></label>
+      <textarea id="schedule-description" rows="2" maxlength="2000"></textarea>
+      <label for="schedule-start">Starts</label>
+      <input id="schedule-start" type="datetime-local" required>
+      <label for="schedule-end">Ends <span>optional</span></label>
+      <input id="schedule-end" type="datetime-local">
+      <label for="schedule-location">Location <span>optional</span></label>
+      <input id="schedule-location" type="text" maxlength="160">
+      <p class="form-error" id="schedule-error" role="alert"></p>
+      <button class="primary-button" id="schedule-submit" type="submit">Save event <span aria-hidden="true">↗</span></button>
+    </form>
+  </dialog>
+</body>
+</html>

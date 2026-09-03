@@ -1,0 +1,1 @@
+"""VirgoZone application package."""

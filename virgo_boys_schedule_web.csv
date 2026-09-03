@@ -1,0 +1,54 @@
+id,day,day_order,slot_order,time,time_24h,activity,description,category,is_open_slot
+fri-1500-gates-open,Friday,1,1,3pm,15:00,Gates Open,,arrival,false
+fri-1600-open,Friday,1,2,4pm,16:00,,,open,true
+fri-1700-set-up,Friday,1,3,5pm,17:00,Set Up,,logistics,false
+fri-1800-set-up,Friday,1,4,6pm,18:00,Set Up,,logistics,false
+fri-1900-dinner,Friday,1,5,7pm,19:00,Dinner,,food,false
+fri-2000-movie,Friday,1,6,8pm,20:00,Movie,,entertainment,false
+fri-2100-movie,Friday,1,7,9pm,21:00,Movie,,entertainment,false
+fri-2200-dj,Friday,1,8,10pm,22:00,DJ,Bad Dog (Bass),music,false
+fri-2300-dj,Friday,1,9,11pm,23:00,DJ,Cassie Vega,music,false
+fri-0000-dj,Friday,1,10,12am,00:00,DJ,Trent Gray,music,false
+fri-0100-stargazing,Friday,1,11,1am,01:00,stargazing,,activity,false
+fri-0200-dj,Friday,1,12,2am,02:00,DJ,Bad Dog (140),music,false
+sat-0700-earlybird-bacon,Saturday,2,1,7am,07:00,Earlybird Bacon,,food,false
+sat-0800-meditation,Saturday,2,2,8am,08:00,Meditation,Isaac,wellness,false
+sat-0900-yoga,Saturday,2,3,9am,09:00,Yoga,Cassie,wellness,false
+sat-1000-breakfast,Saturday,2,4,10am,10:00,Breakfast,,food,false
+sat-1100-meditation,Saturday,2,5,11am,11:00,Meditation,Marco,wellness,false
+sat-1200-leg-day,Saturday,2,6,12pm,12:00,Leg Day,,fitness,false
+sat-1300-swim-bbq,Saturday,2,7,1pm,13:00,Swim / BBQ,,activity,false
+sat-1400-swim-bbq,Saturday,2,8,2pm,14:00,Swim / BBQ,,activity,false
+sat-1500-nap,Saturday,2,9,3pm,15:00,Nap,,chill,false
+sat-1600-archery,Saturday,2,10,4pm,16:00,Archery,,activity,false
+sat-1700-lumberjack-games,Saturday,2,11,5pm,17:00,Lumberjack Games,,activity,false
+sat-1800-lumberjack-games,Saturday,2,12,6pm,18:00,Lumberjack Games,,activity,false
+sat-1900-dinner,Saturday,2,13,7pm,19:00,Dinner,,food,false
+sat-2000-talent-show,Saturday,2,14,8pm,20:00,Talent Show,,entertainment,false
+sat-2100-live-music,Saturday,2,15,9pm,21:00,Live Music,Bad Dog - Live Set,music,false
+sat-2200-live-music,Saturday,2,16,10pm,22:00,Live Music,,music,false
+sat-2300-dj,Saturday,2,17,11pm,23:00,DJ,Nikaela,music,false
+sat-0000-dj,Saturday,2,18,12am,00:00,DJ,Cassie Vega,music,false
+sat-0100-dj,Saturday,2,19,1am,01:00,DJ,Trent Gray,music,false
+sat-0200-dj,Saturday,2,20,2am,02:00,DJ,Bad Dog (flips),music,false
+sat-0300-dj,Saturday,2,21,3am,03:00,DJ,,music,false
+sun-0700-earlybird-bacon,Sunday,3,1,7am,07:00,Earlybird Bacon,,food,false
+sun-0800-meditation,Sunday,3,2,8am,08:00,Meditation,Isaac,wellness,false
+sun-0900-yoga,Sunday,3,3,9am,09:00,Yoga,Cassie,wellness,false
+sun-1000-breakfast,Sunday,3,4,10am,10:00,Breakfast,,food,false
+sun-1100-meditation,Sunday,3,5,11am,11:00,Meditation,Marco,wellness,false
+sun-1200-leg-day,Sunday,3,6,12pm,12:00,Leg Day,,fitness,false
+sun-1300-swim-bbq,Sunday,3,7,1pm,13:00,Swim / BBQ,,activity,false
+sun-1400-swim-bbq,Sunday,3,8,2pm,14:00,Swim / BBQ,,activity,false
+sun-1500-swim-bbq,Sunday,3,9,3pm,15:00,Swim / BBQ,,activity,false
+sun-1600-archery,Sunday,3,10,4pm,16:00,Archery,,activity,false
+sun-1700-lumberjack-games,Sunday,3,11,5pm,17:00,Lumberjack Games,,activity,false
+sun-1800-lumberjack-games,Sunday,3,12,6pm,18:00,Lumberjack Games,,activity,false
+sun-1900-dinner,Sunday,3,13,7pm,19:00,Dinner,,food,false
+sun-2000-dinner,Sunday,3,14,8pm,20:00,Dinner,,food,false
+sun-2100-live-music,Sunday,3,15,9pm,21:00,Live Music,,music,false
+sun-2200-dj,Sunday,3,16,10pm,22:00,DJ,Nikaela,music,false
+sun-2300-dj,Sunday,3,17,11pm,23:00,DJ,Bad Dog (angel core),music,false
+sun-0000-dj,Sunday,3,18,12am,00:00,DJ,,music,false
+sun-0100-dj,Sunday,3,19,1am,01:00,DJ,,music,false
+sun-0200-dj,Sunday,3,20,2am,02:00,DJ,,music,false
