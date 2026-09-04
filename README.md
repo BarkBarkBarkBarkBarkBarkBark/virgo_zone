@@ -84,6 +84,24 @@ See `.env.example`. Important settings are:
 WebSocket messages use `{ "type": "...", "payload": { ... } }`. Browsers
 connect before bootstrap, buffer events while hydrating, and deduplicate by UUID.
 
+## Hosaka in chat
+
+Every committed human chat message queues one Hosaka response. Calls remain
+strictly serialized so Ollama never runs concurrent VirgoZone generations, and
+each response is tied to the triggering message's UUID so later chat cannot leak
+into its context. Hosaka uses a two-sentence identity distilled from
+`Hosaka/identity/AGENT.md` and `SOUL.md`; echoes, role-label leakage, and generic
+assistant refusals are suppressed rather than posted. The floating Hosaka status
+control has been removed; chat keeps a compact listening/thinking/offline status
+and a visible temporary thinking row while Ollama works. Capped sparkles appear
+at every primary touch/click location and remain disabled under reduced motion.
+Hosaka chooses response length from context: casual turns can stay short, while
+explanations, reassurance, and stories may use several sentences.
+Ollama has no configured output-token ceiling for chat. Distinct paragraphs are
+stored and broadcast as separate HOSAKA messages, with long paragraphs split
+only at SQLite's per-message boundary. The finite model context and 120-second
+failure timeout remain so a stalled generation cannot block the social queue forever.
+
 ## Recovery
 
 The database and media directory are all that must be backed up. Stop the service

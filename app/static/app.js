@@ -25,12 +25,8 @@ const elements = {
   lightbox: document.querySelector("#media-lightbox"),
   lightboxMedia: document.querySelector("#lightbox-media"),
   lightboxNotes: document.querySelector("#lightbox-notes"),
-  fairyButton: document.querySelector("#fairy-button"),
-  fairyDialog: document.querySelector("#fairy-dialog"),
-  fairyForm: document.querySelector("#fairy-form"),
-  fairyPrompt: document.querySelector("#fairy-prompt"),
-  fairyError: document.querySelector("#fairy-error"),
-  fairySubmit: document.querySelector("#fairy-submit"),
+  hosakaStatusMark: document.querySelector("#hosaka-status-mark"),
+  hosakaPanelState: document.querySelector("#hosaka-panel-state"),
   scheduleAdminButton: document.querySelector("#schedule-admin-button"),
   adminDialog: document.querySelector("#admin-dialog"),
   adminForm: document.querySelector("#admin-form"),
@@ -68,6 +64,8 @@ let hasBootstrapped = false;
 let activeMediaId = null;
 let adminConfigured = false;
 let adminAuthenticated = false;
+let hosakaActivityCount = 0;
+let hosakaOnline = false;
 
 function createEmptyState(text) {
   const node = document.createElement("div");
@@ -123,6 +121,18 @@ function setConnection(state, label) {
   elements.connection.classList.toggle("is-online", state === "online");
   elements.connection.classList.toggle("is-offline", state === "offline");
   elements.connectionLabel.textContent = label;
+}
+
+function setHosakaStatus(status) {
+  const labels = {
+    listening: "listening",
+    thinking: "thinking…",
+    offline: "offline",
+  };
+  const label = labels[status] ?? status;
+  elements.hosakaPanelState.textContent = label;
+  elements.hosakaStatusMark.textContent = status === "thinking" ? "✦" : "✧";
+  elements.fairyState.title = `Hosaka is ${status}`;
 }
 
 function sortedValues(collection, direction = "asc") {
@@ -235,7 +245,7 @@ function openMedia(post) {
   const fairyComment = document.createElement("button");
   fairyComment.type = "button";
   fairyComment.className = "fairy-comment-button";
-  fairyComment.textContent = "✦ fairy comment";
+  fairyComment.textContent = "✦ ask Hosaka";
   fairyComment.addEventListener("click", () => requestFairyComment(post.id, fairyComment, error));
   const form = document.createElement("form");
   form.className = "comment-composer";
@@ -377,7 +387,6 @@ function renderChat(messages) {
   elements.chat.replaceChildren();
   if (messages.length === 0) {
     elements.chat.append(createEmptyState("quiet enough to hear the router thinking"));
-    return;
   }
   for (const message of messages) {
     const item = document.createElement("article");
@@ -390,6 +399,19 @@ function renderChat(messages) {
     text.textContent = message.text;
     item.append(author, text);
     elements.chat.append(item);
+  }
+  if (hosakaActivityCount > 0) {
+    const thinking = document.createElement("article");
+    thinking.className = "chat-message hosaka-thinking";
+    const author = document.createElement("p");
+    author.className = "chat-author";
+    author.textContent = "✦ HOSAKA";
+    const dots = document.createElement("span");
+    dots.className = "thinking-dots";
+    dots.setAttribute("aria-label", "Hosaka is thinking");
+    dots.append(document.createElement("span"), document.createElement("span"), document.createElement("span"));
+    thinking.append(author, dots);
+    elements.chat.append(thinking);
   }
   elements.chat.scrollTop = elements.chat.scrollHeight;
 }
@@ -420,13 +442,18 @@ function applyEvent(envelope) {
     applyComment(envelope.payload);
   }
   if (envelope.type === "fairy_typing") {
-    elements.fairyState.textContent = "✦";
-    elements.fairyState.title = "Fairy is thinking";
-    elements.fairyState.classList.add("fairy-awake");
+    hosakaActivityCount += 1;
+    setHosakaStatus("thinking");
+    if (envelope.payload?.scope === "chat") {
+      renderChat(sortedValues(applicationState.chat));
+    }
   }
   if (envelope.type === "fairy_finished") {
-    elements.fairyState.textContent = "✧";
-    elements.fairyState.title = "Fairy is awake";
+    hosakaActivityCount = Math.max(0, hosakaActivityCount - 1);
+    setHosakaStatus(hosakaActivityCount > 0 ? "thinking" : hosakaOnline ? "listening" : "offline");
+    if (envelope.payload?.scope === "chat") {
+      renderChat(sortedValues(applicationState.chat));
+    }
   }
   if (["schedule_created", "schedule_updated"].includes(envelope.type) && envelope.payload?.id) {
     applicationState.schedule.set(envelope.payload.id, envelope.payload);
@@ -471,8 +498,8 @@ async function synchronize() {
       replaceCollection(applicationState.media, state.media);
       replaceCollection(applicationState.chat, state.chat);
       renderApplication();
-      elements.fairyState.classList.toggle("fairy-awake", state.feature_flags.fairy);
-      elements.fairyState.title = state.feature_flags.fairy ? "Fairy is awake" : "Fairy is sleeping";
+      hosakaOnline = state.feature_flags.fairy;
+      setHosakaStatus(hosakaOnline ? "listening" : "offline");
       adminConfigured = state.feature_flags.admin;
       await refreshAdminSession();
       hasBootstrapped = true;
@@ -645,39 +672,7 @@ async function requestFairyComment(mediaId, button, errorNode) {
   } finally {
     button.disabled = false;
     button.classList.remove("is-working");
-    button.textContent = "✦ fairy comment";
-  }
-}
-
-async function askFairy(event) {
-  event.preventDefault();
-  const prompt = elements.fairyPrompt.value.trim();
-  if (!prompt) {
-    return;
-  }
-  elements.fairySubmit.disabled = true;
-  elements.fairyError.textContent = "the tiny door is rattling…";
-  try {
-    const response = await fetch("/api/fairy/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      throw new Error(payload.detail || `Fairy failed: ${response.status}`);
-    }
-    applicationState.chat.set(payload.id, payload);
-    renderChat(sortedValues(applicationState.chat));
-    elements.fairyPrompt.value = "";
-    elements.fairyError.textContent = "";
-    elements.fairyDialog.close();
-    selectView("chat");
-  } catch (error) {
-    console.error(error);
-    elements.fairyError.textContent = error.message;
-  } finally {
-    elements.fairySubmit.disabled = false;
+    button.textContent = "✦ ask Hosaka";
   }
 }
 
@@ -814,8 +809,6 @@ elements.identityForm.addEventListener("submit", saveIdentity);
 elements.chatForm.addEventListener("submit", sendChat);
 elements.uploadButton.addEventListener("click", () => elements.uploadDialog.showModal());
 elements.uploadForm.addEventListener("submit", uploadMedia);
-elements.fairyButton.addEventListener("click", () => elements.fairyDialog.showModal());
-elements.fairyForm.addEventListener("submit", askFairy);
 elements.scheduleAdminButton.addEventListener("click", () => {
   if (adminAuthenticated) {
     openScheduleForm();

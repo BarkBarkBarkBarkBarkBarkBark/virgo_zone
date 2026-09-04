@@ -145,6 +145,22 @@ class Database:
             ).fetchall()
         return [self._row(row) for row in rows]
 
+    def chat_before(self, message_id: str, limit: int) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            source = connection.execute(
+                "SELECT created_at, id FROM chat_messages WHERE id = ?",
+                (message_id,),
+            ).fetchone()
+            if source is None:
+                return []
+            rows = connection.execute(
+                "SELECT id, author_id, author_name, text, created_at, is_ai, reply_to "
+                "FROM chat_messages WHERE (created_at, id) < (?, ?) "
+                "ORDER BY created_at DESC, id DESC LIMIT ?",
+                (source["created_at"], source["id"], limit),
+            ).fetchall()
+        return [self._row(row) for row in reversed(rows)]
+
     def chat_page(self, limit: int, before_id: str | None = None) -> list[dict[str, Any]]:
         with self.connection() as connection:
             if before_id is None:

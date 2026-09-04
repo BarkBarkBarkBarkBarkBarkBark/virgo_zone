@@ -13,8 +13,8 @@ router = APIRouter()
 
 def fairy_error(exc: Exception) -> HTTPException:
     if isinstance(exc, FairyBusyError):
-        return HTTPException(status_code=429, detail="fairy is busy")
-    return HTTPException(status_code=503, detail="fairy is sleeping")
+        return HTTPException(status_code=429, detail="Hosaka is busy")
+    return HTTPException(status_code=503, detail="Hosaka is offline")
 
 
 @router.post("/fairy/chat", response_model=ChatMessage)

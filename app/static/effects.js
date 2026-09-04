@@ -61,13 +61,11 @@ function markNew(card) {
   sparkle(bounds.right - 12, bounds.top + 12);
 }
 
-document.addEventListener("click", (event) => {
-  if (!(event.target instanceof Element)) {
+document.addEventListener("pointerdown", (event) => {
+  if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) {
     return;
   }
-  if (event.target.closest("button, .brand, .media-open")) {
-    sparkle(event.clientX, event.clientY);
-  }
-});
+  sparkle(event.clientX, event.clientY);
+}, { passive: true });
 
 window.fairyEffects = { observeCard, markNew };

@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.db import Database
 from app.ollama_client import OllamaClient
 from app.rate_limit import RateLimiter
+from app.social_awareness import SocialAwareness
 from app.routes import api_router
 from app.settings import Settings, get_settings
 from app.websocket import ConnectionManager, router as websocket_router
@@ -61,9 +62,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         resolved.ollama_vision_model,
         resolved.ollama_vision_enabled,
         resolved.ollama_timeout_seconds,
+        resolved.hosaka_identity_dir,
     )
     app.state.connections = ConnectionManager()
     app.state.rate_limiter = RateLimiter()
+    app.state.social_awareness = SocialAwareness()
     app.include_router(api_router)
     app.include_router(websocket_router)
     app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")

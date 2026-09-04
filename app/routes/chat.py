@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request, s
 from starlette.concurrency import run_in_threadpool
 
 from app.models import ChatCreate, ChatMessage, ChatPage
-from app.fairy import background_fairy_chat
+from app.fairy import background_social_chat
 
 
 router = APIRouter()
@@ -46,6 +46,10 @@ async def post_chat(
         raise HTTPException(status_code=400, detail="Invalid reply target") from exc
     message = ChatMessage.model_validate(row)
     await request.app.state.connections.broadcast("chat_created", message.model_dump())
-    if "@fairy" in body.text.lower():
-        background_tasks.add_task(background_fairy_chat, request.app, body.text)
+    background_tasks.add_task(
+        background_social_chat,
+        request.app,
+        message.id,
+        message.text,
+    )
     return message

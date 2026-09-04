@@ -57,7 +57,10 @@
           <p class="eyebrow">general channel</p>
           <h1 id="chat-heading">Chat</h1>
         </div>
-        <span class="panel-glyph fairy-awake" id="fairy-state" title="Fairy status" aria-label="Fairy status">✧</span>
+        <span class="hosaka-panel-status" id="fairy-state" title="Hosaka status" aria-label="Hosaka status">
+          <span class="hosaka-status-mark" id="hosaka-status-mark" aria-hidden="true">✧</span>
+          <span id="hosaka-panel-state">listening</span>
+        </span>
       </div>
       <div class="chat-log" id="chat-log" aria-live="polite"></div>
       <form class="composer" id="chat-form">
@@ -67,8 +70,6 @@
       </form>
     </section>
   </main>
-
-  <button class="fairy-button" id="fairy-button" type="button" title="Ask the LAN fairy" aria-label="Ask the LAN fairy">✦</button>
 
   <nav class="mobile-nav" aria-label="Main views">
     <button type="button" data-view="feed" class="is-active"><span aria-hidden="true">✦</span> Feed</button>
@@ -112,22 +113,6 @@
       <div class="lightbox-media" id="lightbox-media"></div>
       <aside class="lightbox-notes" id="lightbox-notes"></aside>
     </div>
-  </dialog>
-
-  <dialog class="form-dialog" id="fairy-dialog">
-    <form id="fairy-form">
-      <div class="dialog-heading">
-        <div>
-          <p class="eyebrow">knock on the tiny door</p>
-          <h2>Ask LAN FAIRY</h2>
-        </div>
-        <button class="icon-button dialog-close" type="button" data-close-dialog="fairy-dialog" title="Close" aria-label="Close">×</button>
-      </div>
-      <label for="fairy-prompt">Message</label>
-      <textarea id="fairy-prompt" rows="3" maxlength="1000" placeholder="what does the council think"></textarea>
-      <p class="form-error" id="fairy-error" role="alert"></p>
-      <button class="primary-button" id="fairy-submit" type="submit">Summon opinion <span aria-hidden="true">✦</span></button>
-    </form>
   </dialog>
 
   <dialog class="form-dialog" id="admin-dialog">

@@ -143,8 +143,7 @@ a:focus-visible {
   box-shadow: none;
 }
 
-.icon-button,
-.fairy-button {
+.icon-button {
   display: grid;
   place-items: center;
   width: 34px;
@@ -522,6 +521,41 @@ a:focus-visible {
   border-left: 2px solid var(--line-strong);
 }
 
+.chat-message.hosaka-thinking {
+  color: var(--muted);
+  border-left-color: var(--lilac);
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  height: 8px;
+  align-items: center;
+}
+
+.thinking-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--lilac);
+  animation: thinking-pulse 900ms ease-in-out infinite alternate;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes thinking-pulse {
+  to {
+    opacity: 0.25;
+    transform: translateY(-2px);
+  }
+}
+
 .chat-author {
   margin: 0 0 4px;
   color: var(--blue);
@@ -565,16 +599,21 @@ a:focus-visible {
   color: var(--mint);
 }
 
-.fairy-button {
-  position: fixed;
-  z-index: 30;
-  right: 18px;
-  bottom: 18px;
-  width: 44px;
-  height: 44px;
+.hosaka-panel-status {
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+}
+
+.hosaka-panel-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.hosaka-status-mark {
   color: var(--yellow);
-  border-color: rgba(240, 223, 146, 0.38);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  font-size: 17px;
 }
 
 .lightbox {
@@ -881,11 +920,6 @@ a:focus-visible {
 
   .mobile-nav button.is-active {
     color: var(--mint);
-  }
-
-  .fairy-button {
-    right: 14px;
-    bottom: calc(var(--nav-height) + 14px + env(safe-area-inset-bottom));
   }
 
   .lightbox {

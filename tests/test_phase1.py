@@ -69,3 +69,11 @@ def test_index_has_offline_security_headers(client) -> None:
     assert response.headers["x-content-type-options"] == "nosniff"
     assert "default-src 'self'" in response.headers["content-security-policy"]
     assert "VirgoZone" in response.text
+    assert 'id="hosaka-panel-state"' in response.text
+    assert 'id="fairy-button"' not in response.text
+    assert 'id="fairy-dialog"' not in response.text
+
+    effects = client.get("/static/effects.js")
+    assert effects.status_code == 200
+    assert 'addEventListener("pointerdown"' in effects.text
+    assert 'closest("button' not in effects.text

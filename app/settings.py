@@ -58,6 +58,7 @@ class Settings:
     ollama_vision_enabled: bool
     ollama_timeout_seconds: int
     fairy_auto_comment: bool
+    hosaka_identity_dir: Path = Path("/home/jetson/Hosaka/identity")
     admin_session_seconds: int = 28_800
     media_page_size: int = 30
     chat_bootstrap_limit: int = 100
@@ -96,6 +97,9 @@ class Settings:
             ollama_vision_enabled=_read_bool("OLLAMA_VISION_ENABLED", False),
             ollama_timeout_seconds=_read_int("OLLAMA_TIMEOUT_SECONDS", 45, 2, 300),
             fairy_auto_comment=_read_bool("FAIRY_AUTO_COMMENT", False),
+            hosaka_identity_dir=Path(
+                os.getenv("HOSAKA_IDENTITY_DIR", "/home/jetson/Hosaka/identity")
+            ).expanduser().resolve(),
             admin_session_seconds=_read_int("ADMIN_SESSION_SECONDS", 28_800, 300, 604_800),
         )
 
