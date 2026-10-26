@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hmac
+import ipaddress
 import logging
 import socket
 from collections.abc import AsyncIterator
@@ -7,9 +9,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.citations.bridge import CitationsBridge
+from app.citations.worker import CitationsWorker
 from app.db import Database
 from app.ollama_client import OllamaClient
 from app.rate_limit import RateLimiter
@@ -35,6 +39,24 @@ def preferred_lan_ip() -> str | None:
         probe.close()
 
 
+LOCAL_NETWORKS = tuple(
+    ipaddress.ip_network(cidr)
+    for cidr in ("127.0.0.0/8", "::1/128", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "fc00::/7", "fe80::/10")
+)
+
+
+def is_local_client(request: Request) -> bool:
+    """Loopback, LAN, or tailnet peers are 'local'. Tailscale Funnel and other proxies
+    put the real public client in X-Forwarded-For, which takes precedence."""
+    forwarded = request.headers.get("x-forwarded-for", "")
+    candidate = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "")
+    try:
+        address = ipaddress.ip_address(candidate)
+    except ValueError:
+        return False
+    return any(address in network for network in LOCAL_NETWORKS)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     resolved = settings or get_settings()
 
@@ -42,11 +64,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         resolved.ensure_directories()
         app.state.database.initialize()
+        app.state.citations.initialize()
+        if app.state.citations.available:
+            LOGGER.info("Citations wall at http://virgozone.local:%s/citations", resolved.port)
+            app.state.citations_worker.start()
         LOGGER.info("VirgoZone ready at http://virgozone.local:%s", resolved.port)
         lan_ip = preferred_lan_ip()
         if lan_ip:
             LOGGER.info("VirgoZone LAN fallback: http://%s:%s", lan_ip, resolved.port)
-        yield
+        try:
+            yield
+        finally:
+            await app.state.citations_worker.stop()
 
     app = FastAPI(
         title=resolved.app_name,
@@ -65,6 +94,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         resolved.hosaka_identity_dir,
     )
     app.state.connections = ConnectionManager()
+    app.state.citations = CitationsBridge(
+        resolved.citations_source,
+        resolved.resolved_citations_data_dir,
+        resolved.citations_remote_config(),
+        resolved.citations_allow_network,
+    )
+    app.state.citations_worker = CitationsWorker(
+        app.state.citations, app.state.connections, resolved.citations_sync_interval_seconds
+    )
     app.state.rate_limiter = RateLimiter()
     app.state.social_awareness = SocialAwareness()
     app.include_router(api_router)
@@ -83,6 +121,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
+        token = resolved.citations_gate_token
+        path = request.url.path
+        if token and (path == "/citations" or path.startswith("/api/citations")):
+            if not is_local_client(request) and not hmac.compare_digest(
+                request.headers.get("x-gate-token", ""), token
+            ):
+                return JSONResponse({"detail": "Reach the citations wall through its gate."}, status_code=403)
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -97,6 +142,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:
         return FileResponse(APP_DIR / "templates" / "index.html")
+
+    @app.get("/citations", include_in_schema=False)
+    async def citations_page() -> FileResponse:
+        return FileResponse(APP_DIR / "templates" / "citations.html")
 
     return app
 

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <title>VirgoZone · Citations</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/citations.css">
+  <script src="/static/websocket.js" defer></script>
+  <script src="/static/citations.js" defer></script>
+</head>
+<body class="citations-body">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="VirgoZone feed">
+      <span class="brand-mark" aria-hidden="true">♍</span>
+      <span>VIRGO<span class="brand-lan">ZONE</span></span>
+      <span class="brand-section">/ citations</span>
+    </a>
+    <div class="topbar-actions">
+      <span class="connection" id="connection-state" role="status">
+        <span class="connection-dot" aria-hidden="true"></span>
+        <span id="connection-label">connecting</span>
+      </span>
+      <button class="icon-button" id="organizer-button" type="button" title="Organizer sign-in" aria-label="Organizer sign-in">⌁</button>
+      <button class="icon-button" id="identity-button" type="button" title="Change display name" aria-label="Change display name">☺</button>
+    </div>
+  </header>
+
+  <main class="citations-workspace">
+    <aside class="panel citations-side" aria-labelledby="status-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">halloween compliance</p>
+          <h1 id="status-heading">Wall of shame</h1>
+        </div>
+      </div>
+      <dl class="stat-grid" id="stat-grid" aria-live="polite"></dl>
+      <section class="sync-card" id="sync-card" aria-live="polite">
+        <p class="eyebrow">synchronization</p>
+        <p class="sync-line" id="sync-line">checking…</p>
+        <p class="sync-detail" id="sync-detail"></p>
+        <div class="sync-actions">
+          <button class="secondary-button" id="sync-now-button" type="button" hidden>Sync now</button>
+          <button class="secondary-button" id="conflicts-button" type="button" hidden>Conflicts</button>
+        </div>
+      </section>
+      <section class="issue-card" id="issue-card" hidden>
+        <p class="eyebrow">issue a citation</p>
+        <form id="issue-form" class="stack-form">
+          <label><span>Offender</span><input id="issue-name" name="display_name" maxlength="100" list="person-options" required autocomplete="off"></label>
+          <datalist id="person-options"></datalist>
+          <label><span>Violation</span><input id="issue-violation" name="violation" maxlength="120" list="violation-options" required autocomplete="off" placeholder="Existing title, or a new one"></label>
+          <datalist id="violation-options"></datalist>
+          <label><span>Incident</span><textarea id="issue-description" name="description" maxlength="1000" rows="2"></textarea></label>
+          <label><span>Remedy</span><input id="issue-remedy" name="remedy" maxlength="500"></label>
+          <label><span>Deadline (minutes)</span><input id="issue-deadline" name="deadline" type="number" min="1" max="525600" value="60"></label>
+          <label><span>Issued by</span><input id="issue-actor" name="actor" maxlength="100"></label>
+          <p class="form-error" id="issue-error" role="alert"></p>
+          <button class="primary-button" type="submit">Issue citation</button>
+        </form>
+      </section>
+    </aside>
+
+    <section class="panel citations-main" aria-labelledby="list-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow" id="list-count">loading</p>
+          <h1 id="list-heading">Citations</h1>
+        </div>
+      </div>
+      <form class="filters" id="filters" autocomplete="off">
+        <input class="filter-search" id="filter-q" name="q" type="search" placeholder="Search offender, violation, number, incident" maxlength="200">
+        <select id="filter-status" name="status" aria-label="Status">
+          <option value="all">All statuses</option>
+          <option value="open">Open</option>
+          <option value="resolved">Resolved</option>
+          <option value="void">Void</option>
+        </select>
+        <select id="filter-person" name="person" aria-label="Person"><option value="">Everyone</option></select>
+        <select id="filter-violation" name="violation" aria-label="Type"><option value="">Every type</option></select>
+        <select id="filter-offense" name="offense" aria-label="Offense">
+          <option value="all">First & repeat</option>
+          <option value="first">First offense</option>
+          <option value="repeat">Repeat offenders</option>
+        </select>
+        <label class="filter-check"><input id="filter-overdue" name="overdue_only" type="checkbox"> Overdue only</label>
+        <label class="filter-date"><span>From</span><input id="filter-after" name="issued_after" type="datetime-local"></label>
+        <label class="filter-date"><span>To</span><input id="filter-before" name="issued_before" type="datetime-local"></label>
+        <select id="filter-sort" name="sort" aria-label="Sort by">
+          <option value="date">Sort: date</option>
+          <option value="person">Sort: person</option>
+          <option value="type">Sort: type</option>
+          <option value="status">Sort: status</option>
+          <option value="due">Sort: deadline</option>
+          <option value="comments">Sort: comments</option>
+        </select>
+        <button class="secondary-button" id="filter-order" type="button" data-order="desc" aria-label="Toggle sort order">↓ newest</button>
+        <button class="secondary-button" id="filter-reset" type="button">Reset</button>
+      </form>
+      <div class="citation-list" id="citation-list" aria-live="polite"></div>
+    </section>
+
+    <section class="panel citations-detail" id="detail-panel" aria-labelledby="detail-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow" id="detail-eyebrow">select a citation</p>
+          <h1 id="detail-heading">Details</h1>
+        </div>
+        <button class="icon-button" id="detail-close" type="button" title="Close" aria-label="Close details">×</button>
+      </div>
+      <div id="detail-body" class="detail-body"></div>
+    </section>
+  </main>
+
+  <dialog class="form-dialog" id="identity-dialog">
+    <form id="identity-form" method="dialog">
+      <p class="eyebrow">who's commenting</p>
+      <h2>Display name</h2>
+      <label><span>Name</span><input id="identity-input" maxlength="40" required></label>
+      <p class="form-error" id="identity-error" role="alert"></p>
+      <button class="primary-button" type="submit">Save</button>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="organizer-dialog">
+    <form id="organizer-form" method="dialog">
+      <p class="eyebrow">organizer mode</p>
+      <h2>Sign in</h2>
+      <p class="dialog-copy">Issue, resolve, reopen, void, and trigger sync. Uses the VirgoZone admin password.</p>
+      <label><span>Password</span><input id="organizer-password" type="password" maxlength="256" autocomplete="current-password" required></label>
+      <p class="form-error" id="organizer-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="secondary-button" id="organizer-logout" type="button" hidden>Sign out</button>
+        <button class="primary-button" type="submit">Sign in</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog" id="conflicts-dialog">
+    <div>
+      <p class="eyebrow">sync conflicts</p>
+      <h2>Both versions preserved</h2>
+      <div id="conflicts-list" class="conflicts-list"></div>
+      <div class="dialog-actions"><button class="secondary-button" id="conflicts-close" type="button">Close</button></div>
+    </div>
+  </dialog>
+</body>
+</html>

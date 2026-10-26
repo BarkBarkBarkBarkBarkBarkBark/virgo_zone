@@ -1,0 +1,309 @@
+.brand-section {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.citations-workspace {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.8fr) minmax(420px, 1.8fr) minmax(300px, 1fr);
+  min-height: calc(100vh - var(--header-height));
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.stat {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.stat dt {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.stat dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.stat.is-open dd { color: var(--yellow); }
+.stat.is-overdue dd { color: var(--pink); }
+.stat.is-resolved dd { color: var(--mint); }
+.stat.is-void dd { color: var(--muted); }
+
+.sync-card,
+.issue-card {
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.sync-line {
+  margin: 6px 0 2px;
+  font-weight: 650;
+}
+
+.sync-card.is-ok .sync-line { color: var(--mint); }
+.sync-card.is-warn .sync-line { color: var(--yellow); }
+.sync-card.is-error .sync-line { color: var(--pink); }
+
+.sync-detail {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.sync-actions,
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.stack-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.stack-form label,
+.detail-form label {
+  display: grid;
+  gap: 4px;
+}
+
+.stack-form label span,
+.detail-form label span,
+.filter-date span {
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.stack-form input,
+.stack-form select,
+.stack-form textarea,
+.detail-form input,
+.detail-form select,
+.detail-form textarea,
+.filters input,
+.filters select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--black);
+  color: var(--text);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filter-search {
+  flex: 1 1 240px;
+}
+
+.filter-check,
+.filter-date {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.citation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.citation-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--yellow);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: inherit;
+  text-align: left;
+}
+
+.citation-card:hover,
+.citation-card.is-selected {
+  border-color: var(--line-strong);
+  border-left-color: var(--lilac);
+}
+
+.citation-card.status-resolved { border-left-color: var(--mint); }
+.citation-card.status-void { border-left-color: var(--muted); opacity: 0.72; }
+.citation-card.is-overdue { border-left-color: var(--pink); }
+
+.citation-offender {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.citation-violation {
+  margin: 0;
+  color: var(--lilac);
+}
+
+.citation-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 11px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge.status-open { color: var(--yellow); border-color: rgba(240, 223, 146, 0.5); }
+.badge.status-resolved { color: var(--mint); border-color: rgba(156, 225, 193, 0.5); }
+.badge.status-void { color: var(--muted); }
+.badge.is-overdue { color: var(--pink); border-color: rgba(243, 167, 200, 0.6); }
+.badge.is-first { color: var(--blue); }
+
+.detail-body {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-section h3 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.receipt {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 6px;
+  background: var(--black);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.remedy-list,
+.history-list,
+.conflicts-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.remedy-list li,
+.history-list li,
+.conflicts-list li {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.remedy-list li.is-complete {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.history-list li time {
+  display: block;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "DejaVu Sans Mono", monospace;
+  font-size: 10px;
+}
+
+.detail-form {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.detail-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.citation-comments .comment-list {
+  margin-bottom: 10px;
+}
+
+.dialog-copy {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.notice {
+  padding: 10px 12px;
+  border: 1px solid rgba(243, 167, 200, 0.5);
+  border-radius: 6px;
+  color: var(--pink);
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .citations-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .citations-detail {
+    display: none;
+  }
+
+  .citations-detail.is-open {
+    display: block;
+    position: fixed;
+    inset: var(--header-height) 0 0;
+    z-index: 30;
+    overflow: auto;
+  }
+}

@@ -23,6 +23,57 @@ empty result. Photo fairy actions therefore use captions and media metadata and
 never claim to see details that were not provided. Gallery, chat, comments, and
 schedule remain independent from Ollama.
 
+## Citations wall of shame (`/citations`)
+
+VirgoZone can host the Halloween citations wall for the
+[`hosaka_citations`](https://github.com/BarkBarkBarkBarkBarkBarkBark/hosaka_citations)
+extension. It does **not** read Hosaka's private extension data. Instead it
+imports the extension's stdlib-only `citations` package from a checkout
+(`CITATIONS_SOURCE`), drives the documented `run(action, params, context)` API,
+keeps its own SQLite replica under `DATA_DIR/citations/`, and synchronizes with
+the shared Supabase workspace as one more device. Comments on citations are
+VirgoZone-local and never leave this box.
+
+```bash
+# one-time: install, configure, sign in (password prompted, never stored)
+/usr/bin/python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+cp .env.example .env   # fill CITATIONS_* with the publishable key + workspace id
+set -a && . ./.env && set +a
+.venv/bin/python -m app.citations_login
+
+# run on the workstation beside Hosaka
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8069 --workers 1
+```
+
+Open `http://localhost:8069/citations`. Anyone on the LAN can browse, filter
+(person, type, status, first/repeat, overdue, date range), sort (date, person,
+type, status, deadline, comments) and comment. Issue/resolve/reopen/void/remedy
+and "Sync now" require organizer mode (the admin password, `⌁` in the top bar).
+Set `CITATIONS_PUBLIC_WRITE=true` to let guests issue citations and complete
+remedies without signing in.
+
+API: `GET /api/citations/{status,wall,persons,violations,conflicts,{id}}`,
+`POST /api/citations/{id}/comments`, `POST /api/citations/actions`
+(`{"action": "...", "params": {...}}`, forwarded to the extension's schemas).
+WebSocket events: `citations_updated`, `citation_comment_created`.
+
+### Hosaka plugin
+
+`hosaka-extension/` is a Hosaka extension contract v1 package (`id: virgo-zone`)
+that shows VirgoZone health, sync state and the wall inside Hosaka's Menu over
+loopback HTTP. It is read-only and stdlib-only:
+
+```bash
+hosaka extensions validate /path/to/virgo_zone/hosaka-extension
+hosaka extensions link /path/to/virgo_zone/hosaka-extension
+hosaka extensions trust virgo-zone --trusted-local --allow-storage --allow-network
+hosaka extensions enable virgo-zone
+hosaka extensions run virgo-zone status --json
+```
+
+Hosted deployment notes for `citations.hosaka.xyz` live in
+[`docs/citations-hosaka-xyz.md`](docs/citations-hosaka-xyz.md).
+
 ## Development run
 
 ```bash

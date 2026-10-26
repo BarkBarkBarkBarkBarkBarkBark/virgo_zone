@@ -137,6 +137,26 @@ class AdminLogin(BaseModel):
     password: str = Field(min_length=1, max_length=256)
 
 
+class CitationCommentCreate(MediaCommentCreate):
+    """Local-only commentary on a citation; never synchronized to the shared workspace."""
+
+
+class CitationComment(BaseModel):
+    id: str
+    citation_id: str
+    author_id: str | None
+    author_name: str
+    text: str
+    created_at: str
+
+
+class CitationAction(BaseModel):
+    """Forwarded verbatim to the citations extension API, which validates against its schemas."""
+
+    action: str = Field(min_length=1, max_length=40, pattern=r"^[a-z][a-z0-9-]*$")
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class ScheduleEventWrite(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     description: str | None = Field(default=None, max_length=2_000)

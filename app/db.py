@@ -79,6 +79,21 @@ MIGRATIONS = (
         CREATE INDEX IF NOT EXISTS idx_schedule_starts ON schedule_events(starts_at ASC, id ASC);
         """,
     ),
+    (
+        2,
+        """
+        CREATE TABLE IF NOT EXISTS citation_comments (
+            id TEXT PRIMARY KEY,
+            citation_id TEXT NOT NULL CHECK(length(citation_id) BETWEEN 1 AND 64),
+            author_id TEXT NOT NULL REFERENCES users(id),
+            author_name TEXT NOT NULL CHECK(length(author_name) BETWEEN 1 AND 40),
+            text TEXT NOT NULL CHECK(length(text) BETWEEN 1 AND 2000),
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_citation_comments_created
+            ON citation_comments(citation_id, created_at ASC, id ASC);
+        """,
+    ),
 )
 
 
@@ -352,6 +367,47 @@ class Database:
             row = connection.execute(
                 "SELECT id, media_id, author_id, author_name, text, created_at, is_ai "
                 "FROM media_comments WHERE id = ?",
+                (comment_id,),
+            ).fetchone()
+        return self._row(row)
+
+    def citation_comments(self, citation_id: str) -> list[dict[str, Any]]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT id, citation_id, author_id, author_name, text, created_at "
+                "FROM citation_comments WHERE citation_id = ? ORDER BY created_at ASC, id ASC",
+                (citation_id,),
+            ).fetchall()
+        return [self._row(row) for row in rows]
+
+    def citation_comment_counts(self) -> dict[str, int]:
+        with self.connection() as connection:
+            rows = connection.execute(
+                "SELECT citation_id, COUNT(*) AS total FROM citation_comments GROUP BY citation_id"
+            ).fetchall()
+        return {row["citation_id"]: int(row["total"]) for row in rows}
+
+    def create_citation_comment(
+        self, citation_id: str, browser_id: str, author: str, text: str
+    ) -> dict[str, Any]:
+        now = datetime.now(timezone.utc).isoformat()
+        comment_id = str(uuid4())
+        with self.connection() as connection:
+            connection.execute(
+                "INSERT INTO users(id, display_name, created_at, updated_at) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name, "
+                "updated_at=excluded.updated_at",
+                (browser_id, author, now, now),
+            )
+            connection.execute(
+                "INSERT INTO citation_comments(id, citation_id, author_id, author_name, text, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (comment_id, citation_id, browser_id, author, text, now),
+            )
+            connection.commit()
+            row = connection.execute(
+                "SELECT id, citation_id, author_id, author_name, text, created_at "
+                "FROM citation_comments WHERE id = ?",
                 (comment_id,),
             ).fetchone()
         return self._row(row)

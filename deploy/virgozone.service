@@ -22,6 +22,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
+# data/ includes data/citations/ (citations replica + organizer session).
 ReadWritePaths=/home/jetson/fairy_lan/data
 MemoryHigh=700M
 MemoryMax=900M

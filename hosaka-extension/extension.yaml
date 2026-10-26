@@ -1,0 +1,39 @@
+schema_version: 1
+id: virgo-zone
+name: VirgoZone
+version: 0.1.0
+description: Status and wall-of-shame view for the VirgoZone party server running beside Hosaka; the full citations web page lives at /citations on that server.
+requires:
+  hosaka_api: 1
+type: view
+category: party
+entrypoint:
+  file: main.py
+  callable: run
+ui:
+  mode: declarative
+  file: ui.yaml
+permissions:
+  network: true
+  filesystem: data-only
+  subprocess: false
+menu:
+  label: VirgoZone
+  icon: tool
+  order: 320
+actions:
+  status:
+    description: Read VirgoZone health, citations synchronization state and compliance counters over loopback HTTP.
+    input_schema: schemas/empty.input.json
+    output_schema: schemas/result.output.json
+  wall:
+    description: List citations from the VirgoZone wall with the same filters and sorting as the web page.
+    input_schema: schemas/wall.input.json
+    output_schema: schemas/result.output.json
+  configure:
+    description: Store the loopback base URL of the VirgoZone server (default http://127.0.0.1:8069).
+    input_schema: schemas/configure.input.json
+    output_schema: schemas/result.output.json
+limits:
+  timeout_seconds: 15
+  max_output_bytes: 262144

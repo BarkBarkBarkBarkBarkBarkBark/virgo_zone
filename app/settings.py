@@ -62,6 +62,19 @@ class Settings:
     admin_session_seconds: int = 28_800
     media_page_size: int = 30
     chat_bootstrap_limit: int = 100
+    # Citations: VirgoZone drives the halloween-citations extension API from its checkout.
+    citations_source: Path | None = None
+    citations_data_dir: Path | None = None
+    citations_supabase_url: str | None = None
+    citations_publishable_key: str | None = None
+    citations_workspace_id: str | None = None
+    citations_sync_enabled: bool | None = None
+    citations_sync_interval_seconds: int = 60
+    citations_allow_network: bool = True
+    citations_public_write: bool = False
+    # When set, /citations and /api/citations/* require this X-Gate-Token header
+    # (sent by the citations.hosaka.xyz gate), except from loopback clients.
+    citations_gate_token: str | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -70,6 +83,13 @@ class Settings:
         video_max_mb = _read_int("VIDEO_MAX_MB", 250, 1, 2_000)
         min_free_mb = _read_int("MIN_FREE_MB", 1_024, 128, 100_000)
         admin_password = os.getenv("ADMIN_PASSWORD", "neuro").strip() or None
+        citations_source = os.getenv("CITATIONS_SOURCE", "").strip()
+        citations_key = os.getenv("CITATIONS_PUBLISHABLE_KEY", "").strip()
+        if citations_key.startswith("sb_secret_"):
+            raise ValueError("CITATIONS_PUBLISHABLE_KEY must be a publishable/anon key, never a secret key")
+        citations_url = os.getenv("CITATIONS_SUPABASE_URL", "").strip()
+        if citations_url and urlparse(citations_url).scheme != "https":
+            raise ValueError("CITATIONS_SUPABASE_URL must be an https origin")
         return cls(
             app_name=os.getenv("APP_NAME", "VirgoZone").strip() or "VirgoZone",
             host=os.getenv("VIRGOZONE_HOST", os.getenv("FAIRYLAN_HOST", "0.0.0.0")).strip(),
@@ -101,11 +121,39 @@ class Settings:
                 os.getenv("HOSAKA_IDENTITY_DIR", "/home/jetson/Hosaka/identity")
             ).expanduser().resolve(),
             admin_session_seconds=_read_int("ADMIN_SESSION_SECONDS", 28_800, 300, 604_800),
+            citations_source=Path(citations_source).expanduser().resolve() if citations_source else None,
+            citations_data_dir=Path(
+                os.getenv("CITATIONS_DATA_DIR", str(data_dir / "citations"))
+            ).expanduser().resolve(),
+            citations_supabase_url=citations_url or None,
+            citations_publishable_key=citations_key or None,
+            citations_workspace_id=os.getenv("CITATIONS_WORKSPACE_ID", "").strip() or None,
+            citations_sync_enabled=(
+                _read_bool("CITATIONS_SYNC_ENABLED", False) if "CITATIONS_SYNC_ENABLED" in os.environ else None
+            ),
+            citations_sync_interval_seconds=_read_int("CITATIONS_SYNC_INTERVAL_SECONDS", 60, 15, 86_400),
+            citations_allow_network=_read_bool("CITATIONS_ALLOW_NETWORK", True),
+            citations_public_write=_read_bool("CITATIONS_PUBLIC_WRITE", False),
+            citations_gate_token=os.getenv("CITATIONS_GATE_TOKEN", "").strip() or None,
         )
 
     def ensure_directories(self) -> None:
         for path in (self.data_dir, self.uploads_dir, self.thumbnails_dir):
             path.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def resolved_citations_data_dir(self) -> Path:
+        return self.citations_data_dir or (self.data_dir / "citations")
+
+    def citations_remote_config(self) -> dict:
+        """Fields written into the extension's citations-config.json; None means keep existing."""
+        return {
+            "supabase_url": self.citations_supabase_url,
+            "publishable_key": self.citations_publishable_key,
+            "workspace_id": self.citations_workspace_id,
+            "sync_enabled": self.citations_sync_enabled,
+            "sync_interval_seconds": self.citations_sync_interval_seconds,
+        }
 
 
 @lru_cache(maxsize=1)

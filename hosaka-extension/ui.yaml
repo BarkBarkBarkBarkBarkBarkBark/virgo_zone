@@ -1,0 +1,100 @@
+version: 1
+view:
+  type: Navigation
+  pages:
+    - label: Status
+      load:
+        action: status
+        params: {}
+      view:
+        type: Stack
+        children:
+          - type: Heading
+            text: VirgoZone
+          - type: Text
+            text: Party server beside Hosaka. Open the full citations wall of shame in a browser at the server's /citations page (default http://localhost:8069/citations).
+          - type: Button
+            label: Refresh
+            action: status
+          - type: Result
+            bind: result.message
+          - type: Error
+            bind: result.error
+          - type: Status
+            bind: result.success
+          - type: Table
+            bind: result.rows
+            columns: [name, value]
+    - label: Wall of shame
+      load:
+        action: wall
+        params:
+          status: params.status
+          sort: params.sort
+          order: params.order
+          query: params.query
+      view:
+        type: Stack
+        children:
+          - type: Heading
+            text: Wall of shame
+          - type: TextInput
+            id: query
+            label: Search offender, violation, number or incident
+            default: ""
+          - type: Select
+            id: status
+            label: Status
+            options: [all, open, resolved, void]
+            default: open
+          - type: Select
+            id: sort
+            label: Sort by
+            options: [date, person, type, status, due, comments]
+            default: date
+          - type: Select
+            id: order
+            label: Order
+            options: [desc, asc]
+            default: desc
+          - type: Checkbox
+            id: overdue_only
+            label: Overdue only
+            default: false
+          - type: Button
+            label: Search
+            action: wall
+            params:
+              query: params.query
+              status: params.status
+              sort: params.sort
+              order: params.order
+              overdue_only: params.overdue_only
+          - type: Result
+            bind: result.message
+          - type: Error
+            bind: result.error
+          - type: Table
+            bind: result.rows
+            columns: [offender, violation, status, overdue, issued_at, due_at, comment_count, citation_number]
+    - label: Settings
+      view:
+        type: Stack
+        children:
+          - type: Heading
+            text: VirgoZone connection
+          - type: Text
+            text: Loopback only. Hosaka never stores VirgoZone or Supabase credentials; organizer actions happen on the web page.
+          - type: TextInput
+            id: base_url
+            label: VirgoZone base URL
+            default: http://127.0.0.1:8069
+          - type: Button
+            label: Save
+            action: configure
+            params:
+              base_url: params.base_url
+          - type: Result
+            bind: result.message
+          - type: Error
+            bind: result.error

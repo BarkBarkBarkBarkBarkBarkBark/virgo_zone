@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "query": {"type": "string", "maxLength": 200},
+    "status": {"type": "string", "maxLength": 8, "enum": ["all", "open", "resolved", "void"]},
+    "sort": {"type": "string", "maxLength": 10, "enum": ["date", "person", "type", "status", "due", "comments"]},
+    "order": {"type": "string", "maxLength": 4, "enum": ["asc", "desc"]},
+    "overdue_only": {"type": "boolean"}
+  }
+}
