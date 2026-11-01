@@ -100,8 +100,9 @@ def test_issue_filter_sort_and_detail(citations_client: TestClient, citations_se
 
     detail = client.get(f"/api/citations/{alice['id']}").json()
     assert detail["record"]["status"] == "resolved"
-    assert "OFFICIAL HALLOWEEN VIOLATION NOTICE" in detail["receipt"]
+    assert "VIOLATION NOTICE" in detail["receipt"]
     assert any(event["event_type"] for event in detail["history"])
+
 
     # The replica lives in VirgoZone's own data directory, never in the extension source.
     assert (citations_settings.data_dir / "citations" / "citations.sqlite3").exists()

@@ -64,6 +64,15 @@ that shows VirgoZone health, sync state and the wall inside Hosaka's Menu over
 loopback HTTP. It is read-only and stdlib-only:
 
 ```bash
+hosaka extensions install https://github.com/BarkBarkBarkBarkBarkBarkBark/virgo_zone.git --subdir hosaka-extension
+```
+
+This installs the Hosaka extension only (`id: virgo-zone`), disabled and
+untrusted. The VirgoZone web server requires separate setup.
+
+A local checkout can be validated or linked instead of copied:
+
+```bash
 hosaka extensions validate /path/to/virgo_zone/hosaka-extension
 hosaka extensions link /path/to/virgo_zone/hosaka-extension
 hosaka extensions trust virgo-zone --trusted-local --allow-storage --allow-network
