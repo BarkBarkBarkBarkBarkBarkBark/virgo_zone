@@ -41,6 +41,8 @@ def verify_admin_token(token: str | None, password: str | None) -> bool:
 
 
 def require_admin(request: Request) -> None:
+    if request.app.state.gateway_token and request.headers.get("x-hosaka-role") == "organizer":
+        return
     settings = request.app.state.settings
     if settings.admin_password is None:
         raise HTTPException(

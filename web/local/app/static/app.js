@@ -215,13 +215,13 @@ function openMedia(post) {
     mediaNode = document.createElement("video");
     mediaNode.controls = true;
     mediaNode.preload = "metadata";
-    mediaNode.src = post.original_url;
+    mediaNode.src = window.virgoUrl(post.original_url);
     if (post.thumbnail_url) {
-      mediaNode.poster = post.thumbnail_url;
+      mediaNode.poster = window.virgoUrl(post.thumbnail_url);
     }
   } else {
     mediaNode = document.createElement("img");
-    mediaNode.src = post.original_url;
+    mediaNode.src = window.virgoUrl(post.original_url);
     mediaNode.alt = post.caption || `Photo by ${post.author_name}`;
   }
   const author = document.createElement("p");
@@ -306,7 +306,7 @@ function renderCommentThread(mediaId) {
 
 async function loadComments(mediaId) {
   try {
-    const response = await fetch(`/api/media/${encodeURIComponent(mediaId)}/comments`, {
+    const response = await fetch(window.virgoUrl(`/api/media/${encodeURIComponent(mediaId)}/comments`), {
       headers: { Accept: "application/json" },
     });
     if (!response.ok) {
@@ -354,7 +354,7 @@ function renderMedia(media, highlightedId = null) {
     open.addEventListener("click", () => openMedia(post));
     if (post.thumbnail_url) {
       const thumbnail = document.createElement("img");
-      thumbnail.src = post.thumbnail_url;
+      thumbnail.src = window.virgoUrl(post.thumbnail_url);
       thumbnail.alt = post.caption || `Media by ${post.author_name}`;
       thumbnail.loading = "lazy";
       thumbnail.decoding = "async";
@@ -488,7 +488,7 @@ async function synchronize() {
   syncPromise = (async () => {
     syncing = true;
     try {
-      const response = await fetch("/api/bootstrap", { headers: { Accept: "application/json" } });
+      const response = await fetch(window.virgoUrl("/api/bootstrap"), { headers: { Accept: "application/json" } });
       if (!response.ok) {
         throw new Error(`Bootstrap failed: ${response.status}`);
       }
@@ -544,7 +544,7 @@ async function sendChat(event) {
   elements.chatInput.disabled = true;
   elements.chatSend.disabled = true;
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetch(window.virgoUrl("/api/chat"), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
@@ -592,7 +592,7 @@ async function uploadMedia(event) {
   elements.uploadSubmit.disabled = true;
   elements.uploadError.textContent = "uploading through the local ether…";
   try {
-    const response = await fetch("/api/media", { method: "POST", body: data });
+    const response = await fetch(window.virgoUrl("/api/media"), { method: "POST", body: data });
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(payload.detail || `Upload failed: ${response.status}`);
@@ -626,7 +626,7 @@ async function sendMediaComment(event, mediaId, input, submit, errorNode) {
   submit.disabled = true;
   errorNode.textContent = "";
   try {
-    const response = await fetch(`/api/media/${encodeURIComponent(mediaId)}/comments`, {
+    const response = await fetch(window.virgoUrl(`/api/media/${encodeURIComponent(mediaId)}/comments`), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
@@ -657,7 +657,7 @@ async function requestFairyComment(mediaId, button, errorNode) {
   button.textContent = "✦ consulting council…";
   errorNode.textContent = "";
   try {
-    const response = await fetch(`/api/media/${encodeURIComponent(mediaId)}/fairy`, {
+    const response = await fetch(window.virgoUrl(`/api/media/${encodeURIComponent(mediaId)}/fairy`), {
       method: "POST",
       headers: { Accept: "application/json" },
     });
@@ -684,7 +684,7 @@ async function refreshAdminSession() {
     return;
   }
   try {
-    const response = await fetch("/api/admin/session", { headers: { Accept: "application/json" } });
+    const response = await fetch(window.virgoUrl("/api/admin/session"), { headers: { Accept: "application/json" } });
     const session = await response.json();
     adminAuthenticated = session.authenticated;
     elements.scheduleAdminButton.disabled = false;
@@ -702,7 +702,7 @@ async function refreshAdminSession() {
 async function showAdminDialog() {
   elements.adminError.textContent = "";
   try {
-    const response = await fetch("/api/status", { headers: { Accept: "application/json" } });
+    const response = await fetch(window.virgoUrl("/api/status"), { headers: { Accept: "application/json" } });
     const status = await response.json();
     const free = (status.disk_free_bytes / (1024 ** 3)).toFixed(1);
     const media = (status.media_bytes / (1024 ** 3)).toFixed(2);
@@ -717,7 +717,7 @@ async function loginAdmin(event) {
   event.preventDefault();
   elements.adminError.textContent = "";
   try {
-    const response = await fetch("/api/admin/login", {
+    const response = await fetch(window.virgoUrl("/api/admin/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: elements.adminPassword.value }),
@@ -736,7 +736,7 @@ async function loginAdmin(event) {
 }
 
 async function logoutAdmin() {
-  await fetch("/api/admin/logout", { method: "POST" });
+  await fetch(window.virgoUrl("/api/admin/logout"), { method: "POST" });
   adminAuthenticated = false;
   await refreshAdminSession();
   elements.adminDialog.close();
@@ -777,7 +777,7 @@ async function saveScheduleEvent(event) {
   elements.scheduleSubmit.disabled = true;
   elements.scheduleError.textContent = "";
   try {
-    const response = await fetch(eventId ? `/api/schedule/${eventId}` : "/api/schedule", {
+    const response = await fetch(window.virgoUrl(eventId ? `/api/schedule/${eventId}` : "/api/schedule"), {
       method: eventId ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(body),
@@ -797,7 +797,7 @@ async function saveScheduleEvent(event) {
 }
 
 async function deleteScheduleEvent(eventId) {
-  const response = await fetch(`/api/schedule/${eventId}`, { method: "DELETE" });
+  const response = await fetch(window.virgoUrl(`/api/schedule/${eventId}`), { method: "DELETE" });
   if (response.ok) {
     applicationState.schedule.delete(eventId);
     renderSchedule(sortedValues(applicationState.schedule));

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
+import threading
 from pathlib import Path
 
 import pytest
@@ -9,13 +10,38 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.settings import Settings
+from app.citations.bridge import CitationsBridge
 
 
 CITATIONS_SOURCE = Path(
-    os.getenv("CITATIONS_SOURCE", str(Path(__file__).resolve().parents[2] / "hosaka_citations"))
+    os.getenv("CITATIONS_SOURCE", str(Path(__file__).resolve().parents[2] / "hosaka_citations/extension"))
 ).resolve()
 HAS_SOURCE = (CITATIONS_SOURCE / "main.py").is_file() and (CITATIONS_SOURCE / "citations" / "__init__.py").is_file()
 needs_source = pytest.mark.skipif(not HAS_SOURCE, reason="hosaka_citations checkout not available")
+
+
+def test_read_does_not_wait_for_network_synchronization():
+    bridge = object.__new__(CitationsBridge)
+    bridge.context = object()
+    bridge._lock = threading.Lock()
+    bridge._sync_lock = threading.Lock()
+    entered, finish = threading.Event(), threading.Event()
+
+    def run(action, params, context):
+        if action == "sync-now":
+            entered.set()
+            assert finish.wait(2)
+        return {"success": True}
+
+    bridge._run = run
+    worker = threading.Thread(target=bridge.run, args=("sync-now",))
+    worker.start()
+    try:
+        assert entered.wait(1)
+        assert bridge.run("get", {"citation": "synthetic"})["success"]
+    finally:
+        finish.set()
+        worker.join(timeout=3)
 
 
 @pytest.fixture
@@ -105,8 +131,8 @@ def test_issue_filter_sort_and_detail(citations_client: TestClient, citations_se
 
 
     # The replica lives in VirgoZone's own data directory, never in the extension source.
-    assert (citations_settings.data_dir / "citations" / "citations.sqlite3").exists()
-    assert not (CITATIONS_SOURCE / "citations.sqlite3").exists()
+    assert (citations_settings.data_dir / "citations" / "citations.db").exists()
+    assert not (CITATIONS_SOURCE / "citations.db").exists()
 
 
 @needs_source

@@ -5,6 +5,21 @@ the same LAN. It provides live chat, photo/video posts, media comments, a shared
 schedule, and a small Ollama-backed LAN fairy. The browser loads no CDN assets
 and no feature requires WAN access.
 
+## Portable Hosaka Gateway setup
+
+The portable layout is `extension/` for the Hosaka contract and `web/local/`
+for the application. Use the sibling `hosaka-gateway` installer to install
+`virgozone-start` on Linux/macOS, then explicitly approve the web contribution.
+The gateway README documents install, trust, TLS/LAN access and private app
+configuration. `/virgo-zone/` is the canonical gateway URL.
+
+Existing databases stay separate: canonical Hosaka citations, VirgoZone social
+data, and VirgoZone's legacy citation replica/comments are not merged or moved.
+If `data/app.db` already exists, configure its absolute `DATA_DIR` in the
+private `web-config.json` before gateway startup; switching silently to an
+empty managed database is refused. Standalone `.env` deployment remains an
+explicit legacy option below.
+
 ## Current device configuration
 
 - Python 3.10 with an isolated `.venv`
@@ -36,7 +51,7 @@ VirgoZone-local and never leave this box.
 
 ```bash
 # one-time: install, configure, sign in (password prompted, never stored)
-/usr/bin/python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -e .
 cp .env.example .env   # fill CITATIONS_* with the publishable key + workspace id
 set -a && . ./.env && set +a
 .venv/bin/python -m app.citations_login
@@ -59,12 +74,12 @@ WebSocket events: `citations_updated`, `citation_comment_created`.
 
 ### Hosaka plugin
 
-`hosaka-extension/` is a Hosaka extension contract v1 package (`id: virgo-zone`)
+`extension/` is a Hosaka extension contract v1 package (`id: virgo-zone`)
 that shows VirgoZone health, sync state and the wall inside Hosaka's Menu over
 loopback HTTP. It is read-only and stdlib-only:
 
 ```bash
-hosaka extensions install https://github.com/BarkBarkBarkBarkBarkBarkBark/virgo_zone.git --subdir hosaka-extension
+hosaka extensions install https://github.com/BarkBarkBarkBarkBarkBarkBark/virgo_zone.git --subdir extension
 ```
 
 This installs the Hosaka extension only (`id: virgo-zone`), disabled and
@@ -73,8 +88,8 @@ untrusted. The VirgoZone web server requires separate setup.
 A local checkout can be validated or linked instead of copied:
 
 ```bash
-hosaka extensions validate /path/to/virgo_zone/hosaka-extension
-hosaka extensions link /path/to/virgo_zone/hosaka-extension
+hosaka extensions validate /path/to/virgo_zone/extension
+hosaka extensions link /path/to/virgo_zone/extension
 hosaka extensions trust virgo-zone --trusted-local --allow-storage --allow-network
 hosaka extensions enable virgo-zone
 hosaka extensions run virgo-zone status --json

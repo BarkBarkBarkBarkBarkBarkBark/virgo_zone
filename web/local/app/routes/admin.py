@@ -16,7 +16,7 @@ async def admin_session(request: Request) -> dict[str, bool]:
     settings = request.app.state.settings
     return {
         "configured": settings.admin_password is not None,
-        "authenticated": verify_admin_token(
+        "authenticated": bool(request.app.state.gateway_token and request.headers.get("x-hosaka-role") == "organizer") or verify_admin_token(
             request.cookies.get(COOKIE_NAME),
             settings.admin_password,
         ),

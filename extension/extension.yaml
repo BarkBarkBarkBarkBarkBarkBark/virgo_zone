@@ -2,7 +2,7 @@ schema_version: 1
 id: virgo-zone
 name: VirgoZone
 version: 0.1.0
-description: Status and wall-of-shame view for the VirgoZone party server running beside Hosaka; the full citations web page lives at /citations on that server.
+description: Status and wall-of-shame view for the VirgoZone party server via Hosaka Gateway (/virgo-zone/ and /virgo-zone/citations).
 requires:
   hosaka_api: 1
 type: view
@@ -13,6 +13,11 @@ entrypoint:
 ui:
   mode: declarative
   file: ui.yaml
+web:
+  schema_version: 1
+  file: server.py
+  callable: app
+  health: /api/status
 permissions:
   network: true
   filesystem: data-only

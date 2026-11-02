@@ -12,7 +12,7 @@ Environment=PYTHONUNBUFFERED=1
 Environment=VIRGOZONE_HOST=0.0.0.0
 Environment=VIRGOZONE_PORT=8080
 EnvironmentFile=-/etc/virgozone/env
-ExecStart=/home/jetson/fairy_lan/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8080 --workers 1 --log-level info
+ExecStart=/home/jetson/fairy_lan/.venv/bin/uvicorn app.main:app --app-dir /home/jetson/fairy_lan/web/local --host 0.0.0.0 --port 8080 --workers 1 --log-level info
 Restart=always
 RestartSec=3
 TimeoutStopSec=20

@@ -63,7 +63,7 @@ function saveIdentity(event) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(path, {
+  const response = await fetch(window.virgoUrl(path), {
     headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
     ...options,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -184,17 +184,25 @@ function renderCard(row) {
   const card = el("button", `citation-card status-${row.status}${row.overdue ? " is-overdue" : ""}${row.id === state.selectedId ? " is-selected" : ""}`);
   card.type = "button";
   card.dataset.id = row.id;
-  card.append(el("p", "citation-offender", row.offender));
+  card.append(el("p", "citation-offender", `${row.display_code ? row.display_code + " · " : ""}${row.offender}`));
   const badges = el("div");
   badges.append(el("span", `badge status-${row.status}`, row.status));
   if (row.overdue) badges.append(" ", el("span", "badge is-overdue", "overdue"));
   if (row.first_offense) badges.append(" ", el("span", "badge is-first", "first offense"));
   card.append(badges);
   card.append(el("p", "citation-violation", row.violation));
+  if (row.description) {
+    card.append(el("p", "citation-meta", `Comment: ${row.description}`));
+  }
+  const resParts = (row.remedies || []).map((r) => `${r.completed ? "[x]" : "[ ]"} ${r.description}${r.completion_notes ? " (" + r.completion_notes + ")" : ""}`);
+  if (row.resolution_notes) resParts.push(`Note: ${row.resolution_notes}`);
+  if (resParts.length) {
+    card.append(el("p", "citation-meta", `Resolution: ${resParts.join(" · ")}`));
+  }
   const meta = el("p", "citation-meta");
-  meta.append(el("span", null, row.citation_number));
-  meta.append(el("span", null, `issued ${formatTime(row.issued_at)}`));
+  meta.append(el("span", null, `issued ${formatTime(row.issued_at)}${row.issued_by ? " by " + row.issued_by : ""}`));
   if (row.due_at) meta.append(el("span", null, `due ${formatTime(row.due_at)}`));
+  if (row.resolved_at) meta.append(el("span", null, `resolved ${formatTime(row.resolved_at)}${row.resolved_by ? " by " + row.resolved_by : ""}`));
   meta.append(el("span", null, `${row.comment_count} comment${row.comment_count === 1 ? "" : "s"}`));
   card.append(meta);
   card.addEventListener("click", () => selectCitation(row.id));
@@ -228,7 +236,7 @@ function closeDetail() {
 
 function renderDetail() {
   const { record, receipt, remedies, history, comments } = state.detail;
-  $("detail-eyebrow").textContent = `${record.citation_number} · ${record.status}${record.overdue ? " · overdue" : ""}`;
+  $("detail-eyebrow").textContent = `${record.display_code || record.citation_number} · ${record.status}${record.overdue ? " · overdue" : ""}`;
   const body = $("detail-body");
   body.replaceChildren();
 

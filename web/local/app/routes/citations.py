@@ -42,6 +42,8 @@ def _bridge(request: Request):
 
 
 def _is_admin(request: Request) -> bool:
+    if request.app.state.gateway_token and request.headers.get("x-hosaka-role") == "organizer":
+        return True
     settings = request.app.state.settings
     return settings.admin_password is not None and verify_admin_token(
         request.cookies.get(COOKIE_NAME), settings.admin_password

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hosaka-virgozone"
+version = "0.2.0"
+description = "VirgoZone local social application for Hosaka Gateway"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi==0.116.1",
+  "httpx==0.28.1",
+  "pillow==11.3.0",
+  "python-multipart==0.0.20",
+  "uvicorn[standard]==0.35.0",
+]
+
+[project.scripts]
+virgozone-start = "app.launcher:main"
+
+[tool.setuptools.packages.find]
+where = ["web/local"]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["static/*", "templates/*"]

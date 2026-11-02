@@ -3,13 +3,15 @@ from __future__ import annotations
 import hmac
 import ipaddress
 import logging
+import os
+import html
 import socket
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.citations.bridge import CitationsBridge
@@ -84,6 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = resolved
+    app.state.gateway_token = os.environ.get("HOSAKA_GATEWAY_TOKEN", "")
     app.state.database = Database(resolved.database_path)
     app.state.ollama = OllamaClient(
         resolved.ollama_base_url,
@@ -121,6 +124,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
+        gateway_token = app.state.gateway_token
+        if gateway_token and not hmac.compare_digest(
+            request.headers.get("x-hosaka-gateway-token", ""), gateway_token,
+        ):
+            return JSONResponse({"detail": "Use Hosaka Gateway."}, status_code=403)
         token = resolved.citations_gate_token
         path = request.url.path
         if token and (path == "/citations" or path.startswith("/api/citations")):
@@ -139,13 +147,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         return response
 
+    def page(name: str, request: Request) -> HTMLResponse:
+        prefix = request.scope.get("root_path", "").rstrip("/")
+        content = (APP_DIR / "templates" / name).read_text(encoding="utf-8")
+        for attribute in ("src", "href"):
+            content = content.replace(f'{attribute}="/', f'{attribute}="{html.escape(prefix, quote=True)}/')
+        return HTMLResponse(content)
+
     @app.get("/", include_in_schema=False)
-    async def index() -> FileResponse:
-        return FileResponse(APP_DIR / "templates" / "index.html")
+    async def index(request: Request) -> HTMLResponse:
+        return page("index.html", request)
 
     @app.get("/citations", include_in_schema=False)
-    async def citations_page() -> FileResponse:
-        return FileResponse(APP_DIR / "templates" / "citations.html")
+    async def citations_page(request: Request) -> HTMLResponse:
+        return page("citations.html", request)
 
     return app
 

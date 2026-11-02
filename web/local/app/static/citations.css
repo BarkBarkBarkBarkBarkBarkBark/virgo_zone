@@ -295,6 +295,20 @@
     grid-template-columns: 1fr;
   }
 
+  .citations-main,
+  .citations-side {
+    display: block;
+    min-height: auto;
+  }
+
+  .citations-main {
+    order: 1;
+  }
+
+  .citations-side {
+    order: 2;
+  }
+
   .citations-detail {
     display: none;
   }

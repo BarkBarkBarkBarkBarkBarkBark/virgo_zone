@@ -7,7 +7,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+SOURCE_CHECKOUT = (PROJECT_ROOT / "web/local/app/settings.py").resolve() == Path(__file__).resolve()
+DEFAULT_IDENTITY_DIR = (PROJECT_ROOT.parent if SOURCE_CHECKOUT else Path.home()) / "Hosaka/identity"
 
 
 def _read_int(name: str, default: int, minimum: int, maximum: int) -> int:
@@ -58,11 +60,11 @@ class Settings:
     ollama_vision_enabled: bool
     ollama_timeout_seconds: int
     fairy_auto_comment: bool
-    hosaka_identity_dir: Path = Path("/home/jetson/Hosaka/identity")
+    hosaka_identity_dir: Path = DEFAULT_IDENTITY_DIR
     admin_session_seconds: int = 28_800
     media_page_size: int = 30
     chat_bootstrap_limit: int = 100
-    # Citations: VirgoZone drives the halloween-citations extension API from its checkout.
+    # Citations: VirgoZone drives the citations extension API from its checkout.
     citations_source: Path | None = None
     citations_data_dir: Path | None = None
     citations_supabase_url: str | None = None
@@ -78,7 +80,15 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        data_dir = Path(os.getenv("DATA_DIR", str(PROJECT_ROOT / "data"))).expanduser().resolve()
+        if not SOURCE_CHECKOUT and "DATA_DIR" not in os.environ and "HOSAKA_EXTENSION_DATA" not in os.environ:
+            raise ValueError("An installed VirgoZone package requires explicit DATA_DIR or Hosaka Gateway; no database was selected.")
+        default_data = os.getenv("HOSAKA_EXTENSION_DATA", str(PROJECT_ROOT / "data"))
+        data_dir = Path(os.getenv("DATA_DIR", default_data)).expanduser().resolve()
+        legacy = PROJECT_ROOT / "data"
+        if "HOSAKA_EXTENSION_DATA" in os.environ and "DATA_DIR" not in os.environ and (
+            (legacy / "virgo-zone.db").exists() or (legacy / "app.db").exists()
+        ) and data_dir != legacy.resolve():
+            raise ValueError("Existing VirgoZone database found. Set DATA_DIR explicitly in web-config.json; no data was moved.")
         image_max_mb = _read_int("IMAGE_MAX_MB", 20, 1, 100)
         video_max_mb = _read_int("VIDEO_MAX_MB", 250, 1, 2_000)
         min_free_mb = _read_int("MIN_FREE_MB", 1_024, 128, 100_000)
@@ -100,7 +110,7 @@ class Settings:
                 65_535,
             ),
             data_dir=data_dir,
-            database_path=data_dir / "app.db",
+            database_path=data_dir / "virgo-zone.db",
             uploads_dir=data_dir / "uploads",
             thumbnails_dir=data_dir / "thumbnails",
             admin_password=admin_password,
@@ -118,12 +128,19 @@ class Settings:
             ollama_timeout_seconds=_read_int("OLLAMA_TIMEOUT_SECONDS", 45, 2, 300),
             fairy_auto_comment=_read_bool("FAIRY_AUTO_COMMENT", False),
             hosaka_identity_dir=Path(
-                os.getenv("HOSAKA_IDENTITY_DIR", "/home/jetson/Hosaka/identity")
+                os.getenv("HOSAKA_IDENTITY_DIR", str(DEFAULT_IDENTITY_DIR))
             ).expanduser().resolve(),
             admin_session_seconds=_read_int("ADMIN_SESSION_SECONDS", 28_800, 300, 604_800),
             citations_source=Path(citations_source).expanduser().resolve() if citations_source else None,
             citations_data_dir=Path(
-                os.getenv("CITATIONS_DATA_DIR", str(data_dir / "citations"))
+                os.getenv(
+                    "CITATIONS_DATA_DIR",
+                    str(
+                        Path(os.environ["HOSAKA_DATA_DIR"]) / "extension-data/citations"
+                        if "HOSAKA_DATA_DIR" in os.environ
+                        else data_dir / "citations"
+                    ),
+                )
             ).expanduser().resolve(),
             citations_supabase_url=citations_url or None,
             citations_publishable_key=citations_key or None,
@@ -132,7 +149,7 @@ class Settings:
                 _read_bool("CITATIONS_SYNC_ENABLED", False) if "CITATIONS_SYNC_ENABLED" in os.environ else None
             ),
             citations_sync_interval_seconds=_read_int("CITATIONS_SYNC_INTERVAL_SECONDS", 60, 15, 86_400),
-            citations_allow_network=_read_bool("CITATIONS_ALLOW_NETWORK", True),
+            citations_allow_network=_read_bool("CITATIONS_ALLOW_NETWORK", os.getenv("HOSAKA_WEB_NETWORK") != "0"),
             citations_public_write=_read_bool("CITATIONS_PUBLIC_WRITE", False),
             citations_gate_token=os.getenv("CITATIONS_GATE_TOKEN", "").strip() or None,
         )

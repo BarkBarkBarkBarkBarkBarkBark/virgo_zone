@@ -88,6 +88,8 @@ def _import_citations(source: Path | None):
     """Import the extension's `citations` package and `main.run` from CITATIONS_SOURCE."""
     if source is not None:
         source = source.resolve()
+        if (source / "extension" / "extension.yaml").is_file():
+            source = source / "extension"
         if not (source / "citations" / "__init__.py").is_file() or not (source / "main.py").is_file():
             raise CitationsUnavailable(f"CITATIONS_SOURCE does not contain the citations extension: {source}")
         if str(source) not in sys.path:
@@ -116,6 +118,7 @@ class CitationsBridge:
         self.remote = remote
         self.allow_network = allow_network
         self._lock = threading.Lock()
+        self._sync_lock = threading.Lock()
         self._run = None
         self._error: str | None = None
         self.context: CitationsContext | None = None
@@ -171,8 +174,13 @@ class CitationsBridge:
             raise CitationsUnavailable(self._error or "Citations integration is not initialized.")
         if action not in ACTIONS:
             raise ValueError(f"Unknown citations action: {action}")
-        with self._lock:
-            return self._run(action, params or {}, self.context)
+        if action in {"sync-now", "background-tick"}:
+            with self._sync_lock:
+                return self._run(action, params or {}, self.context)
+        if action in MUTATING:
+            with self._lock:
+                return self._run(action, params or {}, self.context)
+        return self._run(action, params or {}, self.context)
 
     def login(self, email: str, password: str) -> None:
         """Server-side Supabase user login; the password is never stored."""
@@ -181,7 +189,7 @@ class CitationsBridge:
         from citations.config import load_config
         from citations.supabase import Supabase
 
-        with self._lock:
+        with self._sync_lock:
             Supabase(self.context, load_config(self.context)).login(email, password)
 
     def session_present(self) -> bool:

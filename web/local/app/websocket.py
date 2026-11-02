@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import hmac
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -53,6 +54,10 @@ class ConnectionManager:
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
+    token = websocket.app.state.gateway_token
+    if token and not hmac.compare_digest(websocket.headers.get("x-hosaka-gateway-token", ""), token):
+        await websocket.close(code=1008)
+        return
     manager: ConnectionManager = websocket.app.state.connections
     await manager.connect(websocket)
     await websocket.send_json({"type": "hello", "payload": {"protocol": 1}})

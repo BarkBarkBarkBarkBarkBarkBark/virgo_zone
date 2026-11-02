@@ -43,10 +43,20 @@ def _valid_base_url(value: str) -> bool:
 
 def _fetch(context, path: str, query: dict | None = None) -> dict:
     context.require_network()
-    url = _base_url(context).rstrip("/") + path
+    headers = {"Accept": "application/json"}
+    runtime = context.read_data("web-runtime.json")
+    if runtime is not None:
+        settings = json.loads(runtime)
+        origin, token = settings["origin"], settings["token"]
+        if not _valid_base_url(origin) or not isinstance(token, str) or not 32 <= len(token) <= 128:
+            raise ValueError("Invalid local web runtime.")
+        headers["X-Hosaka-Gateway-Token"] = token
+    else:
+        origin = _base_url(context)
+    url = origin.rstrip("/") + path
     if query:
         url += "?" + urllib.parse.urlencode({key: value for key, value in query.items() if value not in (None, "")})
-    request = urllib.request.Request(url, headers={"Accept": "application/json"}, method="GET")
+    request = urllib.request.Request(url, headers=headers, method="GET")
     with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
         return json.loads(response.read(1_048_576).decode("utf-8"))
 

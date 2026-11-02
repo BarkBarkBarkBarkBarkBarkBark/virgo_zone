@@ -12,7 +12,7 @@ view:
           - type: Heading
             text: VirgoZone
           - type: Text
-            text: Party server beside Hosaka. Open the full citations wall of shame in a browser at the server's /citations page (default http://localhost:8069/citations).
+            text: Party server beside Hosaka. Open via Hosaka Gateway at http://127.0.0.1:8086/virgo-zone/ (and /virgo-zone/citations for the wall with local comments).
           - type: Button
             label: Refresh
             action: status

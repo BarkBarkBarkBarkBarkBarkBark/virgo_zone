@@ -1,5 +1,8 @@
 "use strict";
 
+const virgoBase = new URL("../", document.currentScript.src);
+window.virgoUrl = (path) => new URL(path.replace(/^\//, ""), virgoBase).toString();
+
 class FairySocket {
   constructor({ onEvent, onOpen, onState }) {
     this.onEvent = onEvent;
@@ -22,7 +25,9 @@ class FairySocket {
     }
     this.onState("connecting");
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    this.socket = new WebSocket(`${protocol}//${location.host}/ws`);
+    const url = new URL(window.virgoUrl("/ws"));
+    url.protocol = protocol;
+    this.socket = new WebSocket(url);
     this.socket.addEventListener("open", () => {
       this.reconnectAttempt = 0;
       this.onState("online");

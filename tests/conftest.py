@@ -8,8 +8,7 @@ from fastapi.testclient import TestClient
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "web/local"))
 
 from app.main import create_app
 from app.settings import Settings
@@ -23,7 +22,7 @@ def settings(tmp_path: Path) -> Settings:
         host="127.0.0.1",
         port=8080,
         data_dir=data_dir,
-        database_path=data_dir / "app.db",
+        database_path=data_dir / "virgo-zone.db",
         uploads_dir=data_dir / "uploads",
         thumbnails_dir=data_dir / "thumbnails",
         admin_password="neuro",
